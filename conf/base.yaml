@@ -1,0 +1,17 @@
+port: 8080
+ip: 127.0.0.1
+host: www.baidu.com
+
+base:
+  redis:
+    host: redis.dns.baidu.com
+    port: 6379
+    dataBase: 0
+    timeout: 2000
+  database:
+    host: redis.dns.baidu.com
+    port: 6379
+    dbtype: postgresql
+    dbname: 0
+    username: postgres
+    password: 123456
