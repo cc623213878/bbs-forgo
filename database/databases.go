@@ -20,7 +20,7 @@ var conn *gorm.DB
 func Conn() error {
 	var dialector gorm.Dialector
 	var config autoconfig.BaseInfo
-	baseConf := config.GetConf("./conf/databases.yaml")
+	baseConf := config.GetConf("./conf/base.yaml")
 	dataConf := baseConf.Base.Database
 	if dataConf.DBType == "mysql" {
 		dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8mb4&parseTime=True&loc=Local",
