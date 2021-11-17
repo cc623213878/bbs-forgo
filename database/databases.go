@@ -15,13 +15,15 @@ import (
 )
 
 var casbinConn *casbin.Enforcer
-var conn *gorm.DB
+var globalConn *gorm.DB
 
 func Conn() error {
 	var dialector gorm.Dialector
 	var config autoconfig.BaseInfo
+	var err error
 	baseConf := config.GetConf("./conf/base.yaml")
 	dataConf := baseConf.Base.Database
+	createDatabase(&dataConf)
 	if dataConf.DBType == "mysql" {
 		dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8mb4&parseTime=True&loc=Local",
 			dataConf.Username, dataConf.Password, dataConf.Host, dataConf.Port, dataConf.DBName)
@@ -31,14 +33,15 @@ func Conn() error {
 			dataConf.Host, dataConf.Port, dataConf.Username, dataConf.DBName, dataConf.Password)
 		dialector = postgres.New(postgres.Config{DSN: dsn, PreferSimpleProtocol: true})
 	}
-	conn, err := gorm.Open(dialector, &gorm.Config{NamingStrategy: schema.NamingStrategy{
+	globalConn, err = gorm.Open(dialector, &gorm.Config{NamingStrategy: schema.NamingStrategy{
 		TablePrefix: "t_",
 	},
+		DisableForeignKeyConstraintWhenMigrating: true,
 	})
 	if err != nil {
 		return err
 	}
-	sqlDB, err := conn.DB()
+	sqlDB, err := globalConn.DB()
 	if err != nil {
 		return err
 	}
@@ -47,7 +50,7 @@ func Conn() error {
 	sqlDB.SetConnMaxLifetime(time.Second * 600) // SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
 
 	//casbin 初始化
-	adapter, _ := gormadapter.NewAdapterByDB(conn) // Your driver and data source.
+	adapter, _ := gormadapter.NewAdapterByDB(globalConn) // Your driver and data source.
 	m, err := model.NewModelFromString(`
     [request_definition]
     r = sub, obj, act
@@ -83,9 +86,39 @@ func Conn() error {
 }
 
 func GetConn() *gorm.DB {
-	return conn
+	return globalConn
 }
 
 func GetCasbinConn() *casbin.Enforcer {
 	return casbinConn
+}
+
+func createDatabase(dataConf *autoconfig.DatabaseData) {
+	var dialector gorm.Dialector
+	if dataConf.DBType == "mysql" {
+		dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/?charset=utf8mb4&parseTime=True&loc=Local",
+			dataConf.Username, dataConf.Password, dataConf.Host, dataConf.Port)
+		dialector = mysql.New(mysql.Config{DSN: dsn, DefaultStringSize: 256})
+	} else if dataConf.DBType == "postgresql" {
+		dsn := fmt.Sprintf("host=%v port=%v user=%v password=%v sslmode=disable TimeZone=Asia/Shanghai",
+			dataConf.Host, dataConf.Port, dataConf.Username, dataConf.Password)
+		dialector = postgres.New(postgres.Config{DSN: dsn, PreferSimpleProtocol: true})
+	}
+	dbcreate, err := gorm.Open(dialector, &gorm.Config{})
+	if err != nil {
+		log.GetLogger().Error(err.Error())
+	}
+	dbconn, err := dbcreate.DB()
+	if err != nil {
+		log.GetLogger().Error(err.Error())
+	}
+	defer dbconn.Close()
+	createSQL := fmt.Sprintf(
+		"CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET utf8mb4;",
+		dataConf.DBName,
+	)
+	err = dbcreate.Exec(createSQL).Error
+	if err != nil {
+		log.GetLogger().Error(err.Error())
+	}
 }

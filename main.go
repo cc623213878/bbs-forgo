@@ -2,13 +2,31 @@ package main
 
 import (
 	"bbs-forgo/database"
+	"bbs-forgo/entity/po"
 	"bbs-forgo/log"
 	"bbs-forgo/middleware"
+	"bbs-forgo/routers"
 	"github.com/gin-gonic/gin"
 )
 
-func RouterInit(e *gin.Engine) {
+func DataBaseInit() error {
+	//数据库初始化
+	err := database.Conn()
+	if err != nil {
+		return err
+	}
+	err = database.GetConn().AutoMigrate(
+		&po.User{},
+		&po.UserInfo{},
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
+func RouterInit(e *gin.Engine) {
+	routers.Login(e)
 }
 
 func MiddlewareInit(e *gin.Engine) {
@@ -29,7 +47,7 @@ func main() {
 	RouterInit(r)
 
 	//数据库初始化
-	err := database.Conn()
+	err := DataBaseInit()
 	if err != nil {
 		log.GetSugarLogger().Error("数据库初始化失败", err.Error())
 		return
