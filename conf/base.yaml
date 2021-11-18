@@ -4,10 +4,11 @@ host: www.baidu.com
 
 base:
   redis:
-    host: redis.dns.baidu.com
+    host: localhost
     port: 6379
     dataBase: 0
     timeout: 2000
+    password: 123456
   database:
     host: localhost
     port: 3306
@@ -15,3 +16,4 @@ base:
     dbname: casbin
     username: root
     password: root
+    tablePrefix: t_

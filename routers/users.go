@@ -5,9 +5,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Login(e *gin.Engine) {
+func Users(e *gin.Engine) {
 	usersGroup := e.Group("/users")
 	{
 		usersGroup.POST("/login", users.Login)
+		usersGroup.POST("/register", users.Register)
 	}
 }

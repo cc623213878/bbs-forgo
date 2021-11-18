@@ -22,18 +22,24 @@ type BaseEntity struct {
 type RedisData struct {
 	Host     string `yaml:"host"`
 	Port     string `yaml:"port"`
-	DataBase string `yaml:"dataBase"`
-	Timeout  string `yaml:"timeout"`
+	DataBase int    `yaml:"dataBase"`
+	Timeout  int    `yaml:"timeout"`
+	Password string `yaml:"password"`
 }
 
 type DatabaseData struct {
-	DBType   string `yaml:"dbtype"`
-	Host     string `yaml:"host"`
-	Port     string `yaml:"port"`
-	DBName   string `yaml:"dbname"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
+	DBType      string `yaml:"dbtype"`
+	Host        string `yaml:"host"`
+	Port        string `yaml:"port"`
+	DBName      string `yaml:"dbname"`
+	Username    string `yaml:"username"`
+	Password    string `yaml:"password"`
+	TablePrefix string `yaml:"tablePrefix"`
 }
+
+var (
+	Config *BaseInfo
+)
 
 func (c *BaseInfo) GetConf(filename string) *BaseInfo {
 	yamlFile, err := ioutil.ReadFile(filename)
@@ -45,4 +51,9 @@ func (c *BaseInfo) GetConf(filename string) *BaseInfo {
 		log.GetLogger().Error(err.Error())
 	}
 	return c
+}
+
+func ConfigInit(filename string) {
+	var baseInfo BaseInfo
+	Config = baseInfo.GetConf(filename)
 }

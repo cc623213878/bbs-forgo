@@ -1,21 +1,23 @@
 package main
 
 import (
-	"bbs-forgo/database"
+	"bbs-forgo/db"
 	"bbs-forgo/entity/po"
 	"bbs-forgo/log"
 	"bbs-forgo/middleware"
 	"bbs-forgo/routers"
+	"bbs-forgo/utils/autoconfig"
 	"github.com/gin-gonic/gin"
 )
 
 func DataBaseInit() error {
 	//数据库初始化
-	err := database.Conn()
+	err := db.Conn()
 	if err != nil {
 		return err
 	}
-	err = database.GetConn().AutoMigrate(
+	dbConn := db.GetConn()
+	err = dbConn.AutoMigrate(
 		&po.User{},
 		&po.UserInfo{},
 	)
@@ -26,15 +28,17 @@ func DataBaseInit() error {
 }
 
 func RouterInit(e *gin.Engine) {
-	routers.Login(e)
+	routers.Users(e)
 }
 
 func MiddlewareInit(e *gin.Engine) {
 	e.Use(middleware.GinLogger())
 	e.Use(middleware.GinRecovery(true))
+	e.Use()
 }
 
 func main() {
+	autoconfig.ConfigInit("./conf/base.yaml")
 	gin.ForceConsoleColor()
 	log.InitLogger("debug")
 	defer log.GetSugarLogger().Sync()
@@ -50,6 +54,12 @@ func main() {
 	err := DataBaseInit()
 	if err != nil {
 		log.GetSugarLogger().Error("数据库初始化失败", err.Error())
+		return
+	}
+
+	err = db.RedisDBInit()
+	if err != nil {
+		log.GetSugarLogger().Error("reids初始化失败", err.Error())
 		return
 	}
 

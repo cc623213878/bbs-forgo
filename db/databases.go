@@ -1,4 +1,4 @@
-package database
+package db
 
 import (
 	"bbs-forgo/log"
@@ -14,15 +14,15 @@ import (
 	"time"
 )
 
-var casbinConn *casbin.Enforcer
-var globalConn *gorm.DB
+var (
+	CasbinConn *casbin.Enforcer
+	DB         *gorm.DB
+)
 
 func Conn() error {
 	var dialector gorm.Dialector
-	var config autoconfig.BaseInfo
 	var err error
-	baseConf := config.GetConf("./conf/base.yaml")
-	dataConf := baseConf.Base.Database
+	dataConf := autoconfig.Config.Base.Database
 	createDatabase(&dataConf)
 	if dataConf.DBType == "mysql" {
 		dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8mb4&parseTime=True&loc=Local",
@@ -33,7 +33,7 @@ func Conn() error {
 			dataConf.Host, dataConf.Port, dataConf.Username, dataConf.DBName, dataConf.Password)
 		dialector = postgres.New(postgres.Config{DSN: dsn, PreferSimpleProtocol: true})
 	}
-	globalConn, err = gorm.Open(dialector, &gorm.Config{NamingStrategy: schema.NamingStrategy{
+	DB, err = gorm.Open(dialector, &gorm.Config{NamingStrategy: schema.NamingStrategy{
 		TablePrefix: "t_",
 	},
 		DisableForeignKeyConstraintWhenMigrating: true,
@@ -41,7 +41,7 @@ func Conn() error {
 	if err != nil {
 		return err
 	}
-	sqlDB, err := globalConn.DB()
+	sqlDB, err := DB.DB()
 	if err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func Conn() error {
 	sqlDB.SetConnMaxLifetime(time.Second * 600) // SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
 
 	//casbin 初始化
-	adapter, _ := gormadapter.NewAdapterByDB(globalConn) // Your driver and data source.
+	adapter, _ := gormadapter.NewAdapterByDB(DB) // Your driver and data source.
 	m, err := model.NewModelFromString(`
     [request_definition]
     r = sub, obj, act
@@ -72,13 +72,13 @@ func Conn() error {
 		log.GetLogger().Error(err.Error())
 		return err
 	}
-	casbinConn, err = casbin.NewEnforcer(m, adapter)
+	CasbinConn, err = casbin.NewEnforcer(m, adapter)
 	if err != nil {
 		log.GetLogger().Error(err.Error())
 		return err
 	}
 	// Load the policy from DB.
-	err = casbinConn.LoadPolicy()
+	err = CasbinConn.LoadPolicy()
 	if err != nil {
 		return err
 	}
@@ -86,11 +86,11 @@ func Conn() error {
 }
 
 func GetConn() *gorm.DB {
-	return globalConn
+	return DB
 }
 
 func GetCasbinConn() *casbin.Enforcer {
-	return casbinConn
+	return CasbinConn
 }
 
 func createDatabase(dataConf *autoconfig.DatabaseData) {

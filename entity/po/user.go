@@ -2,7 +2,6 @@ package po
 
 import (
 	"gorm.io/gorm"
-	"time"
 )
 
 type User struct {
@@ -15,7 +14,7 @@ type UserInfo struct {
 	Username  string `gorm:"primaryKey"`
 	Phone     string
 	Email     string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt int64          `gorm:"autoCreateTime"`
+	UpdatedAt int64          `gorm:"autoUpdateTime"`
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
