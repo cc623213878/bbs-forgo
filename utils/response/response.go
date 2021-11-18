@@ -20,5 +20,6 @@ func Success(c *gin.Context, data interface{}) {
 }
 
 func Error(c *gin.Context, msg string) {
+	c.Abort()
 	c.JSON(http.StatusOK, NewResponse(1, msg, ""))
 }
