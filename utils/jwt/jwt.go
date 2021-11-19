@@ -1,42 +1,10 @@
 package jwt
 
 import (
-	"bbs-forgo/log"
-	"bbs-forgo/utils/response"
 	"errors"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
 	"time"
 )
-
-// JWTAuth 中间件，检查token
-func JWTAuth() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		token := c.Request.Header.Get("token")
-		if token == "" {
-			response.Error(c, "无权限访问！")
-			c.Abort()
-			return
-		}
-		log.GetSugarLogger().Info("token: ", token)
-		j := NewJWT()
-		// parseToken 解析token包含的信息
-		claims, err := j.ParseToken(token)
-		if err != nil {
-			if err == TokenExpired {
-				response.Error(c, "授权已过期！")
-				c.Abort()
-				return
-			}
-			log.GetLogger().Error(err.Error())
-			response.Error(c, "服务内部错误！")
-			c.Abort()
-			return
-		}
-		// 继续交由下一个路由处理,并将解析出的信息传递下去
-		c.Set("claims", claims)
-	}
-}
 
 // JWT 签名结构
 type JWT struct {
@@ -55,7 +23,7 @@ var (
 // CustomClaims 载荷，可以加一些自己需要的信息
 type CustomClaims struct {
 	Username string `json:"username"`
-	Type     string `json:"name"`
+	Password string `json:"password"`
 	jwt.StandardClaims
 }
 

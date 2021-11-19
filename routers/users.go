@@ -1,14 +1,20 @@
 package routers
 
 import (
+	"bbs-forgo/middleware"
 	"bbs-forgo/services/users"
 	"github.com/gin-gonic/gin"
 )
 
 func Users(e *gin.Engine) {
-	usersGroup := e.Group("/users")
+	noneLoginGroup := e.Group("/users")
 	{
-		usersGroup.POST("/login", users.Login)
-		usersGroup.POST("/register", users.Register)
+		noneLoginGroup.POST("/login", users.Login)
+		noneLoginGroup.POST("/register", users.Register)
+	}
+	userGroup := e.Group("/users")
+	userGroup.Use(middleware.JWTAuth())
+	{
+		userGroup.POST("/logout", users.Logout)
 	}
 }

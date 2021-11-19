@@ -45,9 +45,9 @@ func Conn() error {
 	if err != nil {
 		return err
 	}
-	sqlDB.SetMaxIdleConns(10)                   // SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
-	sqlDB.SetMaxOpenConns(100)                  // SetMaxOpenConns sets the maximum number of open connections to the database.
-	sqlDB.SetConnMaxLifetime(time.Second * 600) // SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
+	sqlDB.SetMaxIdleConns(10)                                     // SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
+	sqlDB.SetMaxOpenConns(100)                                    // SetMaxOpenConns sets the maximum number of open connections to the database.
+	sqlDB.SetConnMaxLifetime(time.Duration(8*3600) * time.Second) // SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
 
 	//casbin 初始化
 	adapter, _ := gormadapter.NewAdapterByDB(DB) // Your driver and data source.

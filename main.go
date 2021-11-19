@@ -34,7 +34,6 @@ func RouterInit(e *gin.Engine) {
 func MiddlewareInit(e *gin.Engine) {
 	e.Use(middleware.GinLogger())
 	e.Use(middleware.GinRecovery(true))
-	e.Use()
 }
 
 func main() {

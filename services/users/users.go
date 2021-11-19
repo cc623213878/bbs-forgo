@@ -5,9 +5,12 @@ import (
 	"bbs-forgo/entity/dto"
 	"bbs-forgo/entity/po"
 	"bbs-forgo/log"
+	myjwt "bbs-forgo/utils/jwt"
 	"bbs-forgo/utils/response"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"time"
 )
 
 // Login 登录
@@ -18,10 +21,29 @@ func Login(c *gin.Context) {
 		log.GetLogger().Error("param error")
 		return
 	}
-	if db.DB.First(&user).RowsAffected > 0 {
-
+	res := db.DB.First(&user)
+	if res != nil && res.RowsAffected > 0 {
+		expiresTime := time.Now().Unix() + 3600
+		j := myjwt.NewJWT()
+		claims := myjwt.CustomClaims{
+			Username: user.Username,
+			Password: user.Password,
+			StandardClaims: jwt.StandardClaims{
+				ExpiresAt: expiresTime,
+				// 指定token发行人
+				Issuer: "go-forbbs",
+			},
+		}
+		token, err := j.CreateToken(claims)
+		if err != nil {
+			log.GetLogger().Error("CreateToken error")
+			return
+		}
+		// 继续交由下一个路由处理,并将解析出的信息传递下去
+		response.Success(c, gin.H{"token": token})
+		return
 	}
-	response.Success(c, "")
+	response.Error(c, "用户名或密码错误！")
 }
 
 // Logout 退出登录
