@@ -20,6 +20,7 @@ func DataBaseInit() error {
 	err = dbConn.AutoMigrate(
 		&po.User{},
 		&po.UserInfo{},
+		&po.Article{},
 	)
 	if err != nil {
 		return err
@@ -29,6 +30,7 @@ func DataBaseInit() error {
 
 func RouterInit(e *gin.Engine) {
 	routers.Users(e)
+	routers.Article(e)
 }
 
 func MiddlewareInit(e *gin.Engine) {

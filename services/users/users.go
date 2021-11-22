@@ -67,19 +67,20 @@ func Register(c *gin.Context) {
 		return
 	}
 	err = db.DB.Transaction(func(tx *gorm.DB) error {
-		// 在事务中执行一些 db 操作（从这里开始，您应该使用 'tx' 而不是 'db'）
-		if err := tx.Create(&po.User{
+		insertUser := po.User{
 			Username: user.Username,
 			Password: user.Password,
-		}).Error; err != nil {
+		}
+		// 在事务中执行一些 db 操作（从这里开始，您应该使用 'tx' 而不是 'db'）
+		if err := tx.Create(&insertUser).Error; err != nil {
 			// 返回任何错误都会回滚事务
 			return err
 		}
 
 		if err := tx.Create(&po.UserInfo{
-			Username: user.Username,
-			Phone:    user.Phone,
-			Email:    user.Email,
+			UserID: insertUser.ID,
+			Phone:  user.Phone,
+			Email:  user.Email,
 		}).Error; err != nil {
 			return err
 		}

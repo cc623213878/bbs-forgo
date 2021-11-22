@@ -11,7 +11,7 @@ base:
     password: 123456
   database:
     host: localhost
-    port: 3306
+    port: 33066
     dbtype: mysql
     dbname: casbin
     username: root
