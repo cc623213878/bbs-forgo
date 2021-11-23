@@ -1,7 +1,7 @@
 package vo
 
 // ArticleList 文章列表
-type ArticleList struct {
+type Article struct {
 	Title     string
 	Keywords  string
 	CoverPath string

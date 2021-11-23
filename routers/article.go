@@ -9,5 +9,6 @@ func Article(e *gin.Engine) {
 	articleGroup := e.Group("/article")
 	{
 		articleGroup.POST("/getArticleList", article.GetArticleList)
+		articleGroup.POST("/getArticleByID", article.GetArticleByID)
 	}
 }
